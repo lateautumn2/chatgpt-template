@@ -1,31 +1,15 @@
 const url = import.meta.env.VITE_BASE_URL
 
-export interface GptMsg {
-  role: string
-  content: string
-}
-export type GptMsgs = Array<GptMsg>
 export class StreamGpt {
-  onStart: (prompt: string) => void
-  onCreated: () => void
-  onDone: () => void
-  onPatch: (text: string) => void
-  constructor(
-    private key: string,
-    options: {
-      onStart: (prompt: string) => void
-      onCreated: () => void
-      onDone: () => void
-      onPatch: (text: string) => void
-    }
-  ) {
+  constructor(key, options) {
     const { onStart, onCreated, onDone, onPatch } = options
+    this.key = key
     this.onStart = onStart
     this.onCreated = onCreated
     this.onPatch = onPatch
     this.onDone = onDone
   }
-  async stream(prompt: string, history: GptMsgs = []) {
+  async stream(prompt, history = []) {
     let finish = false
     let count = 0
     // 触发onStart
@@ -35,7 +19,7 @@ export class StreamGpt {
     if (!res.body) return
     // 从response中获取reader
     const reader = res.body.getReader()
-    const decoder: TextDecoder = new TextDecoder()
+    const decoder = new TextDecoder()
     // 循环读取内容
     while (!finish) {
       const { done, value } = await reader.read()
@@ -50,7 +34,7 @@ export class StreamGpt {
       if (count === 1) {
         this.onCreated()
       }
-      jsonArray.forEach((json: any) => {
+      jsonArray.forEach((json) => {
         if (!json.choices || json.choices.length === 0) {
           return
         }
@@ -59,7 +43,7 @@ export class StreamGpt {
       })
     }
   }
-  async fetch(messages: GptMsgs) {
+  async fetch(messages) {
     return await fetch(url + 'v1/chat/completions', {
       method: 'POST',
       body: JSON.stringify({
@@ -76,10 +60,12 @@ export class StreamGpt {
 }
 // 打字机队列
 export class Typewriter {
-  private queue: string[] = []
-  private consuming = false
-  private timmer: any
-  constructor(private onConsume: (str: string) => void) {}
+  constructor(onConsume) {
+    this.onConsume = onConsume
+    this.queue = []
+    this.consuming = false
+    this.timmer = null
+  }
   // 输出速度动态控制
   dynamicSpeed() {
     const speed = 5000 / this.queue.length
@@ -90,7 +76,7 @@ export class Typewriter {
     }
   }
   // 添加字符串到队列
-  add(str: string) {
+  add(str) {
     if (!str) return
     this.queue.push(...str.split(''))
   }
@@ -127,11 +113,11 @@ export class Typewriter {
   }
 }
 
-const parsePack = (str: string) => {
+const parsePack = (str) => {
   // 定义正则表达式匹配模式
   const pattern = /data:\s*({.*?})\s*\n/g
   // 定义一个数组来存储所有匹 配到的 JSON 对象
-  const result: any = []
+  const result = []
   // 使用正则表达式匹配完整的 JSON 对象并解析它们
   let match
   while ((match = pattern.exec(str)) !== null) {

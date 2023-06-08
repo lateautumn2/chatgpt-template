@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch, nextTick } from 'vue'
-import { useGpt } from '@/hook/api.ts'
+import { useGpt } from '@/hook/api.js'
 import { md } from '@/utils/markdown'
 import { useScroll } from '@vueuse/core'
 

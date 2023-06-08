@@ -1,25 +1,25 @@
 // 整合封装 vue3 composition api
 import { ref } from 'vue'
-import { StreamGpt, Typewriter, GptMsgs } from '@/utils/scripts'
+import { StreamGpt, Typewriter } from '@/utils/scripts'
 import { md } from '@/utils/markdown'
 
-export const useGpt = (key: string, history: boolean = false) => {
+export const useGpt = (key, history = false) => {
   const streamingText = ref('')
   const streaming = ref(false)
-  const msgList = ref<GptMsgs>([])
-  const typewriter = new Typewriter((str: string) => {
+  const msgList = ref([])
+  const typewriter = new Typewriter((str) => {
     streamingText.value += str || ''
     // console.log('str', streamingText.value)
   })
   const gpt = new StreamGpt(key, {
-    onStart: (prompt: string) => {
+    onStart: (prompt) => {
       streaming.value = true
       msgList.value.push({
         role: 'user',
         content: prompt
       })
     },
-    onPatch: (text: string) => {
+    onPatch: (text) => {
       //   console.log('onPatch', text)
       typewriter.add(text)
     },
@@ -37,7 +37,7 @@ export const useGpt = (key: string, history: boolean = false) => {
     }
   })
   // 如果是history模式，则在strame时将msgList传入
-  const stream = (prompt: string) => {
+  const stream = (prompt) => {
     gpt.stream(prompt, history ? msgList.value : undefined)
   }
   return {
